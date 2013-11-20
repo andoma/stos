@@ -1,0 +1,11 @@
+#
+# Anything between the 'BEGIN SHOWTIME CONFIG' and 'END SHOWTIME CONFIG'
+# may be modified by Showtime itself. Avoid putting your own config there
+#
+
+# BEGIN SHOWTIME CONFIG
+start_file=start_x.elf
+fixup_file=fixup_x.elf
+gpu_mem=192
+hdmi_ignore_cec_init=1
+# END SHOWTIME CONFIG
