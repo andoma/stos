@@ -2,9 +2,6 @@
 
 set -e
 
-TARGET=$1
-TYPE=$2
-CMD=$3
 TOPDIR=`dirname $0`
 STOSROOT=`cd ${TOPDIR} && pwd`
 
@@ -61,6 +58,10 @@ while getopts "j:" o; do
 done
 
 shift $((OPTIND-1))
+
+TARGET=$1
+TYPE=$2
+CMD=$3
 
 [ -z "${TARGET}" ] && die "No target specified"
 [ -z "${TYPE}"   ] && die "No type specified"
