@@ -137,7 +137,14 @@ mksquashfs "${STOSROOT}/linux-firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp x
 # Showtime release
 #===========================================================================
 
-wget -O "${BUILDDIR}/boot/showtime.sqfs" http://pam.lonelycoder.com/file/92f93616971bc164028c7d91d695296c082b942b
+DLINFO=`curl http://showtime.lonelycoder.com/upgrade/testing-rpi.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
+
+echo "Using Showtime: $DLINFO"
+
+DLURL=`echo "$DLINFO" | cut -d" " -f1`
+
+wget -O "${BUILDDIR}/boot/showtime.sqfs" $DLURL
+
 
 #===========================================================================
 # Other stuff
