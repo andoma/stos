@@ -8,11 +8,59 @@ CMD=$3
 TOPDIR=`dirname $0`
 STOSROOT=`cd ${TOPDIR} && pwd`
 
+# ---- Misc helpers ----
 
 function die() {
     echo "$1"
     exit 1
 }
+
+# ---- Doozer helpers ----
+
+#
+# $1 = local file path
+# $2 = type
+# $3 = content-type
+# $4 = filename
+#
+
+
+artifact() {
+    echo "doozer-artifact:$PWD/$1:$2:$3:$4"
+}
+
+artifact_gzip() {
+    echo "doozer-artifact-gzip:$PWD/$1:$2:$3:$4"
+}
+
+versioned_artifact() {
+    echo "doozer-versioned-artifact:$PWD/$1:$2:$3:$4"
+}
+
+rpi_doozer_artifacts() {
+    artifact_gzip output/${TARGET}/${TYPE}/sd.img             img  application/octet-stream sd.img
+    artifact      output/${TARGET}/${TYPE}/boot/firmware.sqfs sqfs application/octet-stream firmware.sqfs
+    artifact      output/${TARGET}/${TYPE}/boot/rootfs.sqfs   sqfs application/octet-stream root.sqfs
+    artifact      output/${TARGET}/${TYPE}/boot/modules.sqfs  sqfs application/octet-stream modules.sqfs
+    artifact      output/${TARGET}/${TYPE}/boot/kernel.img    bin  application/octet-stream kernel.img
+}
+
+# ------------------------
+
+JARGS=""
+
+while getopts "j:" o; do
+    case "${o}" in
+        j)
+	    JARGS="-j${OPTARG}"
+            ;;
+        *)
+            usage
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
 
 [ -z "${TARGET}" ] && die "No target specified"
 [ -z "${TYPE}"   ] && die "No type specified"
@@ -27,6 +75,7 @@ case "${TARGET}" in
 	KTC="${UTC}"
 	TOOLCHAIN_URL=http://www.lonelycoder.com/download/arm-unknown-linux-gnueabi.tar.gz
 	TOOLCHAIN_DIR="${BUILDDIR}/arm-unknown-linux-gnueabi"
+	DOOZER_ARTIFACTS=rpi_doozer_artifacts
 	;;
     *)
 	die "Unknown target"
@@ -57,6 +106,10 @@ case "${CMD}" in
 	cp "${BR_CONFIG}" "${STOSROOT}/config/buildroot-${TARGET}-${TYPE}.config" 
 	
 
+	exit 0
+	;;
+    doozer-artifacts)
+	eval $DOOZER_ARTIFACTS
 	exit 0
 	;;
     *)
@@ -114,7 +167,7 @@ ${UTC}gcc -O2 -static -o "${BUILDDIR}/initrd/init" ${STOSROOT}/src/init.c
 
 mkdir -p "${BUILDDIR}/kernel"
 
-make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} zImage -j5
+make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} zImage ${JARGS}
 
 cp "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel.img"
 
@@ -122,9 +175,9 @@ cp "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel.img"
 # Linux kernel modules
 #===========================================================================
 
-make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} modules -j5
+make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} modules ${JARGS}
 rm -rf "${BUILDDIR}/lib/modules"
-make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} INSTALL_MOD_PATH=${BUILDDIR} modules_install -j5
+make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} INSTALL_MOD_PATH=${BUILDDIR} modules_install ${JARGS}
 mksquashfs "${BUILDDIR}/lib/modules" "${BUILDDIR}/boot/modules.sqfs" -comp xz
 
 #===========================================================================
