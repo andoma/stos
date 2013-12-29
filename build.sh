@@ -23,8 +23,8 @@ BUILDDIR="${STOSROOT}/output/${TARGET}/${TYPE}"
 case "${TARGET}" in
     rpi)
 	ARCH=arm
-	KTC=/usr/bin/arm-linux-gnueabi-
 	UTC="${BUILDDIR}/buildroot/host/usr/bin/arm-unknown-linux-gnueabi-"
+	KTC="${UTC}"
 	TOOLCHAIN_URL=http://www.lonelycoder.com/download/arm-unknown-linux-gnueabi.tar.gz
 	TOOLCHAIN_DIR="${BUILDDIR}/arm-unknown-linux-gnueabi"
 	;;
