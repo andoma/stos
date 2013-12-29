@@ -60,7 +60,7 @@ build()
 
 deps()
 {
-
+    echo No deps support right now
 }
 
 eval $OP
