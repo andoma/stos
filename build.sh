@@ -34,7 +34,7 @@ case "${TARGET}" in
 esac
 
 export KCONFIG_CONFIG="${STOSROOT}/config/kernel-${TARGET}-${TYPE}.config"
-
+BR_CONFIG="${BUILDDIR}/buildroot/.config"
 
 #===========================================================================
 # What to do
@@ -46,6 +46,17 @@ case "${CMD}" in
 	;;
     kconfig)
 	make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} menuconfig
+	exit 0
+	;;
+    uconfig)
+
+	mkdir -p "${BUILDDIR}/buildroot"
+	cp "${STOSROOT}/config/buildroot-${TARGET}-${TYPE}.config" "${BR_CONFIG}"
+
+	make -C ${STOSROOT}/buildroot O=${BUILDDIR}/buildroot/ menuconfig
+	cp "${BR_CONFIG}" "${STOSROOT}/config/buildroot-${TARGET}-${TYPE}.config" 
+	
+
 	exit 0
 	;;
     *)
@@ -79,7 +90,6 @@ fi
 # Buildroot (Root filesystem)
 #===========================================================================
 
-BR_CONFIG="${BUILDDIR}/buildroot/.config"
 
 export STOS_TOOLCHAIN_DIR=${TOOLCHAIN_DIR}
 
