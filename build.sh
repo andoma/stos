@@ -37,7 +37,7 @@ versioned_artifact() {
 rpi_doozer_artifacts() {
     artifact_gzip output/${TARGET}/${TYPE}/sd.img             img  application/octet-stream sd.img
     artifact      output/${TARGET}/${TYPE}/boot/firmware.sqfs sqfs application/octet-stream firmware.sqfs
-    artifact      output/${TARGET}/${TYPE}/boot/rootfs.sqfs   sqfs application/octet-stream root.sqfs
+    artifact      output/${TARGET}/${TYPE}/boot/rootfs.sqfs   sqfs application/octet-stream rootfs.sqfs
     artifact      output/${TARGET}/${TYPE}/boot/modules.sqfs  sqfs application/octet-stream modules.sqfs
     artifact      output/${TARGET}/${TYPE}/boot/kernel.img    bin  application/octet-stream kernel.img
 }
