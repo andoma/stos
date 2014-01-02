@@ -123,39 +123,7 @@ main(int argc, char **argv)
 
   close(loop0);
 
-#if 0
-  printf("Mounting kernel modules\n");
-
-  int kmodfs = open(FALLBACK_MODULESFS, O_RDONLY);
-
-  if(kmodfs < 0) {
-    printf("Unable to open %s -- %s\n", FALLBACK_MODULESFS,
-	   strerror(errno));
-    exit(1);
-  }
-
-  int loop1 = open("/dev/loop1", O_RDONLY);
-  if(loop1 < 0) {
-    printf("Unable to open /dev/loop1 -- %s\n",
-	   strerror(errno));
-    exit(1);
-  }
-
-  if(ioctl(loop1, LOOP_SET_FD, kmodfs)) {
-    printf("Unable to ioctl(loop1, kmodfs) -- %s\n", strerror(errno));
-    exit(1);
-  }
-
-  if(mount("/dev/loop1", "/root/lib/modules", "squashfs", MS_RDONLY, "")) {
-    printf("/dev/loop1 failed to mount %s\n", strerror(errno));
-    exit(1);
-  }
-
-  close(loop1);
-#endif
-
   printf("Ok, about to transfer control to rootfs\n");
-
 
   umount2("/boot", MNT_DETACH);
   umount2("/proc", MNT_DETACH);

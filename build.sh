@@ -63,6 +63,8 @@ TARGET=$1
 TYPE=$2
 CMD=$3
 
+export STOS_VERSION=`git describe --dirty --abbrev=5 2>/dev/null | sed  -e 's/-/./g'`
+
 [ -z "${TARGET}" ] && die "No target specified"
 [ -z "${TYPE}"   ] && die "No type specified"
 [ -z "${CMD}"    ] && die "No command specified"
@@ -92,7 +94,7 @@ BR_CONFIG="${BUILDDIR}/buildroot/.config"
 
 case "${CMD}" in
     build)
-	echo "Building for Raspberry Pi"
+	echo "Building ${STOS_VERSION} for ${TARGET}"
 	;;
     kconfig)
 	make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} menuconfig
