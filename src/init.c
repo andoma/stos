@@ -141,6 +141,15 @@ main(int argc, char **argv)
   }
 
   chroot(".");
+
+  // Setup default env vars for creating filesystems
+
+  if(getenv("STOS_mkfs_ext4_args") == NULL)
+    setenv("STOS_mkfs_ext4_args",
+           "-E stride=2,stripe-width=1024 -b 4096 -O ^has_journal", 1);
+
+  // Spawn init
+
   argv[0] = "/sbin/init";
   execv(argv[0], argv);
   printf("Unable to execv(\"%s\") -- %s\n", argv[0], strerror(errno));
