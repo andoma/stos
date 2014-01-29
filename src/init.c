@@ -146,7 +146,7 @@ main(int argc, char **argv)
 
   if(getenv("STOS_mkfs_ext4_args") == NULL)
     setenv("STOS_mkfs_ext4_args",
-           "-E stride=2,stripe-width=1024 -b 4096 -O ^has_journal", 1);
+           "-E nodiscard,stride=2,stripe-width=1024 -b 4096 -O ^has_journal", 1);
 
   // Spawn init
 
