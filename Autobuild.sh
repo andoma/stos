@@ -54,7 +54,7 @@ TYPE=release
 build()
 {
     rm -rf output
-    git submodule update --recursive --init
+    ./build.sh ${JARGS} ${TARGET} ${TYPE} update_submodules
     ./build.sh ${JARGS} ${TARGET} ${TYPE} build
     ./build.sh ${TARGET} ${TYPE} doozer-artifacts
 }

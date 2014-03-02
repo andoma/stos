@@ -1,12 +1,12 @@
 [submodule "buildroot"]
 	path = buildroot
 	url = https://github.com/andoma/buildroot.git
-[submodule "linux"]
-	path = linux
-	url = https://github.com/raspberrypi/linux.git
 [submodule "linux-firmware"]
 	path = linux-firmware
 	url = https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
 [submodule "mkfatimg"]
 	path = mkfatimg
 	url = https://github.com/andoma/mkfatimg.git
+[submodule "linux-rpi"]
+	path = linux-rpi
+	url = https://github.com/raspberrypi/linux.git

@@ -40,6 +40,8 @@ rpi_doozer_artifacts() {
     artifact      output/${TARGET}/${TYPE}/boot/rootfs.sqfs   sqfs application/octet-stream rootfs.sqfs
     artifact      output/${TARGET}/${TYPE}/boot/modules.sqfs  sqfs application/octet-stream modules.sqfs
     artifact      output/${TARGET}/${TYPE}/boot/kernel.img    bin  application/octet-stream kernel.img
+    artifact      output/${TARGET}/${TYPE}/boot/config.txt    txt  application/octet-stream config.txt
+    artifact      output/${TARGET}/${TYPE}/boot/cmdline.txt   txt  application/octet-stream cmdline.txt
 }
 
 # ------------------------
@@ -96,8 +98,17 @@ case "${CMD}" in
     build)
 	echo "Building ${STOS_VERSION} for ${TARGET}"
 	;;
+
+    update_submodules)
+	git submodule sync
+	git submodule update --init buildroot
+	git submodule update --init mkfatimg
+	git submodule update --init linux-firmware
+	git submodule update --init linux-${TARGET}
+	;;
+
     kconfig)
-	make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} menuconfig
+	make -C ${STOSROOT}/linux-${TARGET} O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} menuconfig
 	exit 0
 	;;
     uconfig)
@@ -170,7 +181,7 @@ ${UTC}gcc -O2 -static -o "${BUILDDIR}/initrd/init" ${STOSROOT}/src/init.c
 
 mkdir -p "${BUILDDIR}/kernel"
 
-make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} zImage ${JARGS}
+make -C ${STOSROOT}/linux-${TARGET} O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} zImage ${JARGS}
 
 cp "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel.img"
 
@@ -178,9 +189,9 @@ cp "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel.img"
 # Linux kernel modules
 #===========================================================================
 
-make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} modules ${JARGS}
+make -C ${STOSROOT}/linux-${TARGET} O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} modules ${JARGS}
 rm -rf "${BUILDDIR}/lib/modules"
-make -C ${STOSROOT}/linux O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} INSTALL_MOD_PATH=${BUILDDIR} modules_install ${JARGS}
+make -C ${STOSROOT}/linux-${TARGET} O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} INSTALL_MOD_PATH=${BUILDDIR} modules_install ${JARGS}
 mksquashfs "${BUILDDIR}/lib/modules" "${BUILDDIR}/boot/modules.sqfs" -comp xz
 
 #===========================================================================
@@ -193,7 +204,7 @@ mksquashfs "${STOSROOT}/linux-firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp x
 # Showtime release
 #===========================================================================
 
-DLINFO=`curl http://showtime.lonelycoder.com/upgrade/testing-rpi.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
+DLINFO=`curl http://showtime.lonelycoder.com/upgrade/testing-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
 
 echo "Using Showtime: $DLINFO"
 
