@@ -42,6 +42,9 @@ rpi_doozer_artifacts() {
     artifact      output/${TARGET}/${TYPE}/boot/kernel.img    bin  application/octet-stream kernel.img
     artifact      output/${TARGET}/${TYPE}/boot/config.txt    txt  application/octet-stream config.txt
     artifact      output/${TARGET}/${TYPE}/boot/cmdline.txt   txt  application/octet-stream cmdline.txt
+    artifact      output/${TARGET}/${TYPE}/boot/bootcode.bin  bin  application/octet-stream bootcode.bin
+    artifact      output/${TARGET}/${TYPE}/boot/fixup_x.dat   bin  application/octet-stream fixup_x.dat
+    artifact      output/${TARGET}/${TYPE}/boot/start_x.elf   bin  application/octet-stream start_x.elf
 }
 
 # ------------------------
