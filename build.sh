@@ -8,6 +8,18 @@ STOSROOT=`cd ${TOPDIR} && pwd`
 # ---- Misc helpers ----
 
 function die() {
+    echo "usage: $0 TARGET BUILDTYPE CMD"
+    echo "  List of targets:"
+    echo "    rpi"
+    echo
+    echo "  BUILDTYPE can be   debug   or   release"
+    echo
+    echo "  List of commands"
+    echo "    kconfig     - Configure kernel"
+    echo "    uconfig     - Configure buildroot"
+    echo "    build       - Build"
+    echo
+
     echo "$1"
     exit 1
 }
