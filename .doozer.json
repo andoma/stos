@@ -1,0 +1,31 @@
+{
+  "targets": {
+
+    "rpi": {
+      "buildenv": "precise-amd64",
+      "builddeps": [
+        "git-core",
+        "build-essential",
+        "autoconf",
+        "bison",
+        "flex",
+        "libelf-dev",
+        "libtool",
+        "pkg-config",
+        "texinfo",
+        "libncurses5-dev",
+        "libz-dev",
+        "python-dev",
+        "libssl-dev",
+        "libgmp3-dev",
+        "ccache",
+        "zip",
+        "curl",
+        "wget",
+        "squashfs-tools"
+      ],
+      "buildcmd": "./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
+    }
+  }
+}
+
