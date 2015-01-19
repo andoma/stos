@@ -15,9 +15,10 @@ function die() {
     echo "  BUILDTYPE can be   debug   or   release"
     echo
     echo "  List of commands"
-    echo "    kconfig     - Configure kernel"
-    echo "    uconfig     - Configure buildroot"
-    echo "    build       - Build"
+    echo "    kconfig           - Configure kernel"
+    echo "    uconfig           - Configure buildroot"
+    echo "    build             - Build"
+    echo "    update_submodules - Sycn and update submouldes"
     echo
 
     echo "$1"
@@ -116,10 +117,10 @@ case "${CMD}" in
 
     update_submodules)
 	git submodule sync
-	git submodule update --init buildroot
-	git submodule update --init mkfatimg
-	git submodule update --init linux-firmware
-	git submodule update --init linux-${TARGET}
+	git submodule update --init -f buildroot
+	git submodule update --init -f mkfatimg
+	git submodule update --init -f linux-firmware
+	git submodule update --init -f linux-${TARGET}
 	;;
 
     kconfig)
