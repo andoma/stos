@@ -22,7 +22,8 @@
         "zip",
         "curl",
         "wget",
-        "squashfs-tools"
+        "squashfs-tools",
+        "whois"
       ],
       "buildcmd": "./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
     }
