@@ -89,6 +89,9 @@ main(int argc, char **argv)
 
   parse_partition_table();
 
+  extern void fsck(const char *path);
+  fsck("/dev/mmcblk0p1");
+
   if(mount("/dev/mmcblk0p1", "/boot", "vfat", MS_RDONLY, "")) {
     printf("/dev/mmcblk0p1 failed to mount %s\n", strerror(errno));
     exit(1);

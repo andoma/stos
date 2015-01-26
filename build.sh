@@ -189,7 +189,7 @@ cp "${BUILDDIR}/buildroot/images/rootfs.squashfs" "${BUILDDIR}/boot/rootfs.sqfs"
 rm -rf "${BUILDDIR}/initrd"
 mkdir -p "${BUILDDIR}/initrd"
 
-${UTC}gcc -O2 -static -o "${BUILDDIR}/initrd/init" ${STOSROOT}/src/init.c
+${UTC}gcc -O2 -static -o "${BUILDDIR}/initrd/init" ${STOSROOT}/src/*.c
 
 #===========================================================================
 # Linux kernel
