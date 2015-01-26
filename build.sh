@@ -142,6 +142,10 @@ case "${CMD}" in
 	eval $DOOZER_ARTIFACTS
 	exit 0
 	;;
+    info)
+        echo "Userland toolchain      ${UTC}"
+        exit 0
+        ;;
     *)
 	die "Unknown target"
 	;;
