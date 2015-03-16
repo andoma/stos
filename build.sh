@@ -18,7 +18,7 @@ function die() {
     echo "    kconfig           - Configure kernel"
     echo "    uconfig           - Configure buildroot"
     echo "    build             - Build"
-    echo "    update_submodules - Sycn and update submouldes"
+    echo "    update_submodules - Sync and update submouldes"
     echo
 
     echo "$1"
@@ -92,10 +92,8 @@ BUILDDIR="${STOSROOT}/output/${TARGET}/${TYPE}"
 case "${TARGET}" in
     rpi)
 	ARCH=arm
-	UTC="${BUILDDIR}/buildroot/host/usr/bin/arm-unknown-linux-gnueabi-"
+	UTC="${BUILDDIR}/buildroot/host/usr/bin/arm-buildroot-linux-gnueabihf-"
 	KTC="${UTC}"
-	TOOLCHAIN_URL=http://www.lonelycoder.com/download/arm-unknown-linux-gnueabi.tar.gz
-	TOOLCHAIN_DIR="${BUILDDIR}/arm-unknown-linux-gnueabi"
 	DOOZER_ARTIFACTS=rpi_doozer_artifacts
 	;;
     *)
@@ -133,9 +131,7 @@ case "${CMD}" in
 	cp "${STOSROOT}/config/buildroot-${TARGET}-${TYPE}.config" "${BR_CONFIG}"
 
 	make -C ${STOSROOT}/buildroot O=${BUILDDIR}/buildroot/ menuconfig
-	cp "${BR_CONFIG}" "${STOSROOT}/config/buildroot-${TARGET}-${TYPE}.config" 
-	
-
+	cp "${BR_CONFIG}" "${STOSROOT}/config/buildroot-${TARGET}-${TYPE}.config"
 	exit 0
 	;;
     doozer-artifacts)
@@ -156,29 +152,11 @@ export BUILDDIR
 rm -rf "${BUILDDIR}/boot"
 mkdir -p "${BUILDDIR}/boot"
 
-#===========================================================================
-# Download toolchain
-#===========================================================================
-
-echo "Toolchain from: '${TOOLCHAIN_URL}' Local install in: ${TOOLCHAIN_DIR}"
-if [ -d "${TOOLCHAIN_DIR}" ]; then
-    echo "Toolchain seems to exist"
-else
-    curl -L "${TOOLCHAIN_URL}" | tar xfz - -C ${BUILDDIR}
-	
-    STATUS=$?
-    if [ $STATUS -ne 0 ]; then
-	echo "Unable to stage toolchain"
-	exit 1
-    fi
-fi
 
 #===========================================================================
 # Buildroot (Root filesystem)
 #===========================================================================
 
-
-export STOS_TOOLCHAIN_DIR=${TOOLCHAIN_DIR}
 
 mkdir -p "${BUILDDIR}/buildroot"
 cp "${STOSROOT}/config/buildroot-${TARGET}-${TYPE}.config" "${BR_CONFIG}"
@@ -224,7 +202,7 @@ mksquashfs "${STOSROOT}/linux-firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp x
 # Showtime release
 #===========================================================================
 
-DLINFO=`curl https://showtimemediacenter.com/upgrade/1/stable-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
+DLINFO=`curl -L https://showtimemediacenter.com/upgrade/1/stable-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
 
 echo "Using Showtime: $DLINFO"
 
