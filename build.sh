@@ -117,11 +117,22 @@ case "${CMD}" in
 	;;
 
     update_submodules)
+        echo "Git submodule status before sync"
+        git submodule status
+
 	git submodule sync
+
+        echo "Git submodule status after sync"
+        git submodule status
+
 	git submodule update --init -f buildroot
 	git submodule update --init -f mkfatimg
 	git submodule update --init -f linux-firmware
 	git submodule update --init -f linux-${TARGET}
+
+        echo "Git submodule status after update"
+        git submodule status
+        exit 0
 	;;
 
     kconfig)
