@@ -2,7 +2,7 @@
   "targets": {
 
     "rpi": {
-      "buildenv": "precise-amd64",
+      "buildenv": "trusty-amd64",
       "builddeps": [
         "git-core",
         "build-essential",
