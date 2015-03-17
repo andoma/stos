@@ -211,9 +211,9 @@ mksquashfs "${STOSROOT}/linux-firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp x
 # Showtime release
 #===========================================================================
 
-DLINFO=`curl -L https://showtimemediacenter.com/upgrade/1/stable-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
+DLINFO=`curl -L https://movian.tv/upgrade/1/testing-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
 
-echo "Using Showtime: $DLINFO"
+echo "Using Movian: $DLINFO"
 
 DLURL=`echo "$DLINFO" | cut -d" " -f1`
 
