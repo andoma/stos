@@ -25,7 +25,8 @@
         "squashfs-tools",
         "whois",
         "bc",
-        "dosfstools"
+        "dosfstools",
+        "locales"
       ],
       "buildcmd": "./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
     }
