@@ -19,6 +19,8 @@ function die() {
     echo "    uconfig           - Configure buildroot"
     echo "    build             - Build"
     echo "    update_submodules - Sync and update submouldes"
+    echo "    info              - Show some paths"
+    echo "    get-toolchain     - Get toolchain + sysroot as .tar.gz"
     echo
 
     echo "$1"
@@ -92,6 +94,7 @@ BUILDDIR="${STOSROOT}/output/${TARGET}/${TYPE}"
 case "${TARGET}" in
     rpi)
 	ARCH=arm
+	HOSTDIR="${BUILDDIR}/buildroot/host"
 	UTC="${BUILDDIR}/buildroot/host/usr/bin/arm-buildroot-linux-gnueabihf-"
 	KTC="${UTC}"
 	DOOZER_ARTIFACTS=rpi_doozer_artifacts
@@ -140,6 +143,12 @@ case "${CMD}" in
 	;;
     info)
         echo "Userland toolchain      ${UTC}"
+        exit 0
+        ;;
+    get-toolchain)
+        TOOLCHAINOUT="/tmp/stos-host-${STOS_VERSION}.tar.bz2"
+        echo "Packing toolchain from ${HOSTDIR} to ${TOOLCHAINOUT}"
+        tar -cj -C "${HOSTDIR}/.." -f "${TOOLCHAINOUT}" host
         exit 0
         ;;
     *)
