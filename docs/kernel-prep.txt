@@ -1,0 +1,5 @@
+
+Important kernel config for boot:
+
+initrd
+squashfs must be compiled in (not a module)
