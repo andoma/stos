@@ -26,7 +26,8 @@
         "whois",
         "bc",
         "dosfstools",
-        "locales"
+        "locales",
+        "language-pack-en-base"
       ],
       "buildcmd": "./Autobuild.sh -t ${TARGET} -j ${PARALLEL} -w ${WORKDIR}"
     }
