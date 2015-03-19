@@ -58,8 +58,8 @@ rpi_doozer_artifacts() {
     artifact      output/${TARGET}/${TYPE}/boot/rootfs.sqfs   sqfs application/octet-stream rootfs.sqfs
     artifact_sel  output/${TARGET}/${TYPE}/boot/modules.sqfs  sqfs application/octet-stream modules.sqfs "machine=armv6l"
     artifact_sel  output/${TARGET}/${TYPE}/boot/modules_armv7l.sqfs  sqfs application/octet-stream modules_armv7l.sqfs "machine=armv7l"
-    artifact      output/${TARGET}/${TYPE}/boot/kernel.img    bin  application/octet-stream kernel.img  "machine=armv6l"
-    artifact      output/${TARGET}/${TYPE}/boot/kernel7.img    bin  application/octet-stream kernel7.img  "machine=armv7l"
+    artifact_sel  output/${TARGET}/${TYPE}/boot/kernel.img    bin  application/octet-stream kernel.img  "machine=armv6l"
+    artifact_sel  output/${TARGET}/${TYPE}/boot/kernel7.img    bin  application/octet-stream kernel7.img  "machine=armv7l"
     artifact      output/${TARGET}/${TYPE}/boot/config.txt    txt  application/octet-stream config.txt
     artifact      output/${TARGET}/${TYPE}/boot/cmdline.txt   txt  application/octet-stream cmdline.txt
     artifact      output/${TARGET}/${TYPE}/boot/bootcode.bin  bin  application/octet-stream bootcode.bin
