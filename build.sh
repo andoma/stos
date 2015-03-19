@@ -15,7 +15,6 @@ function die() {
     echo "  BUILDTYPE can be   debug   or   release"
     echo
     echo "  List of commands"
-    echo "    kconfig           - Configure kernel"
     echo "    uconfig           - Configure buildroot"
     echo "    build             - Build"
     echo "    update_submodules - Sync and update submouldes"
@@ -41,6 +40,10 @@ artifact() {
     echo "doozer-artifact:$PWD/$1:$2:$3:$4"
 }
 
+artifact_sel() {
+    echo "doozer-artifact:$PWD/$1:$2:$3:$4:$5"
+}
+
 artifact_gzip() {
     echo "doozer-artifact-gzip:$PWD/$1:$2:$3:$4"
 }
@@ -53,8 +56,10 @@ rpi_doozer_artifacts() {
     artifact_gzip output/${TARGET}/${TYPE}/sd.img             img  application/octet-stream sd.img
     artifact      output/${TARGET}/${TYPE}/boot/firmware.sqfs sqfs application/octet-stream firmware.sqfs
     artifact      output/${TARGET}/${TYPE}/boot/rootfs.sqfs   sqfs application/octet-stream rootfs.sqfs
-    artifact      output/${TARGET}/${TYPE}/boot/modules.sqfs  sqfs application/octet-stream modules.sqfs
-    artifact      output/${TARGET}/${TYPE}/boot/kernel.img    bin  application/octet-stream kernel.img
+    artifact_sel  output/${TARGET}/${TYPE}/boot/modules.sqfs  sqfs application/octet-stream modules.sqfs "machine=armv6l"
+    artifact_sel  output/${TARGET}/${TYPE}/boot/modules_armv7l.sqfs  sqfs application/octet-stream modules_armv7l.sqfs "machine=armv7l"
+    artifact      output/${TARGET}/${TYPE}/boot/kernel.img    bin  application/octet-stream kernel.img  "machine=armv6l"
+    artifact      output/${TARGET}/${TYPE}/boot/kernel7.img    bin  application/octet-stream kernel7.img  "machine=armv7l"
     artifact      output/${TARGET}/${TYPE}/boot/config.txt    txt  application/octet-stream config.txt
     artifact      output/${TARGET}/${TYPE}/boot/cmdline.txt   txt  application/octet-stream cmdline.txt
     artifact      output/${TARGET}/${TYPE}/boot/bootcode.bin  bin  application/octet-stream bootcode.bin
@@ -96,7 +101,6 @@ case "${TARGET}" in
 	ARCH=arm
 	HOSTDIR="${BUILDDIR}/buildroot/host"
 	UTC="${BUILDDIR}/buildroot/host/usr/bin/arm-buildroot-linux-gnueabihf-"
-	KTC="${UTC}"
 	DOOZER_ARTIFACTS=rpi_doozer_artifacts
 	;;
     *)
@@ -104,7 +108,6 @@ case "${TARGET}" in
 	;;
 esac
 
-export KCONFIG_CONFIG="${STOSROOT}/config/kernel-${TARGET}-${TYPE}.config"
 BR_CONFIG="${BUILDDIR}/buildroot/.config"
 
 #===========================================================================
@@ -128,17 +131,13 @@ case "${CMD}" in
 	git submodule update --init -f buildroot
 	git submodule update --init -f mkfatimg
 	git submodule update --init -f linux-firmware
-	git submodule update --init -f linux-${TARGET}
+	git submodule update --init -f ${KSRC}
 
         echo "Git submodule status after update"
         git submodule status
         exit 0
 	;;
 
-    kconfig)
-	make -C ${STOSROOT}/linux-${TARGET} O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} menuconfig
-	exit 0
-	;;
     uconfig)
 
 	mkdir -p "${BUILDDIR}/buildroot"
@@ -197,20 +196,44 @@ ${UTC}gcc -O2 -static -o "${BUILDDIR}/initrd/init" ${STOSROOT}/src/*.c
 # Linux kernel
 #===========================================================================
 
-mkdir -p "${BUILDDIR}/kernel"
 
-make -C ${STOSROOT}/linux-${TARGET} O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} zImage ${JARGS}
+case "${TARGET}" in
+    rpi)
 
-cp "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel.img"
+        # For rpi we will build two kernels
 
-#===========================================================================
-# Linux kernel modules
-#===========================================================================
+        # First for rpi1
+        export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi-${TYPE}.config"
+        KSRC="${STOSROOT}/linux-rpi"
+        mkdir -p "${BUILDDIR}/kernel"
+        make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} zImage ${JARGS}
+        cp "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel.img"
 
-make -C ${STOSROOT}/linux-${TARGET} O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} modules ${JARGS}
-rm -rf "${BUILDDIR}/lib/modules"
-make -C ${STOSROOT}/linux-${TARGET} O=${BUILDDIR}/kernel/ ARCH=${ARCH} CROSS_COMPILE=${KTC} INSTALL_MOD_PATH=${BUILDDIR} modules_install ${JARGS}
-mksquashfs "${BUILDDIR}/lib/modules" "${BUILDDIR}/boot/modules.sqfs" -comp xz
+        make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} modules ${JARGS}
+        rm -rf "${BUILDDIR}/modinst/lib/modules"
+        make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} INSTALL_MOD_PATH=${BUILDDIR}/modinst modules_install ${JARGS}
+        mksquashfs "${BUILDDIR}/modinst/lib/modules" "${BUILDDIR}/boot/modules.sqfs" -comp xz
+
+
+        # Then for rpi2 (kernel7)
+        export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi2-${TYPE}.config"
+        KSRC="${STOSROOT}/linux-rpi"
+        mkdir -p "${BUILDDIR}/kernel7"
+        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} zImage ${JARGS}
+        cp "${BUILDDIR}/kernel7/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel7.img"
+
+        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} modules ${JARGS}
+        rm -rf "${BUILDDIR}/modinst7/lib/modules"
+        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} INSTALL_MOD_PATH=${BUILDDIR}/modinst7 modules_install ${JARGS}
+        mksquashfs "${BUILDDIR}/modinst7/lib/modules" "${BUILDDIR}/boot/modules_armv7l.sqfs" -comp xz
+	;;
+    *)
+	die "Unknown target for kernel build"
+	;;
+esac
+
+
+
 
 #===========================================================================
 # Linux firmware

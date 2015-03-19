@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
+#include <sys/utsname.h>
 
 #include <stdio.h>
 
@@ -58,49 +59,14 @@ parse_partition_table(void)
 #define FALLBACK_ROOTFS "/boot/rootfs.sqfs"
 #define FALLBACK_MODULESFS "/boot/modules.sqfs"
 
-int
-main(int argc, char **argv)
+static void
+mount_rootfs(void)
 {
-  mkdir("/dev", 0700);
-  mkdir("/proc", 0700);
-  mkdir("/boot", 0700);
-  mkdir("/root", 0700);
-  mkdir("/persistent", 0700);
-
-  if(mount("tmpfs", "/dev", "tmpfs", 0, "")) {
-    printf("proc failed to mount %s\n", strerror(errno));
-    exit(1);
-  }
-
-  mknod("/dev/console", S_IFCHR | 0644, makedev(5, 1));
-  mknod("/dev/loop0",   S_IFBLK | 0644, makedev(7, 0));
-  mknod("/dev/loop1",   S_IFBLK | 0644, makedev(7, 1));
-
-  dup2(0, open("/dev/console", O_RDWR));
-  dup2(1, open("/dev/console", O_RDWR));
-  dup2(2, open("/dev/console", O_RDWR));
-  printf("sqfs init starting\n");
-
-
-  if(mount("proc", "/proc", "proc", 0, "")) {
-    printf("proc failed to mount %s\n", strerror(errno));
-    exit(1);
-  }
-
-  parse_partition_table();
-
-  extern void fsck(const char *path);
-  fsck("/dev/mmcblk0p1");
-
-  if(mount("/dev/mmcblk0p1", "/boot", "vfat", MS_RDONLY, "")) {
-    printf("/dev/mmcblk0p1 failed to mount %s\n", strerror(errno));
-    exit(1);
-  }
+  // --- rootfs
 
   printf("Mounting root FS\n");
 
   int rootfs = open(FALLBACK_ROOTFS, O_RDONLY);
-
   if(rootfs < 0) {
     printf("Unable to open %s -- %s\n", FALLBACK_ROOTFS,
 	   strerror(errno));
@@ -124,7 +90,100 @@ main(int argc, char **argv)
     exit(1);
   }
 
+  close(rootfs);
   close(loop0);
+}
+
+
+static void
+mount_modulefs(struct utsname *uts)
+{
+  char tmp[256];
+
+  // --- modules
+  snprintf(tmp, sizeof(tmp), "/boot/modules_%s.sqfs", uts->machine);
+
+  int modulesfs = open(tmp, O_RDONLY);
+  if(modulesfs < 0) {
+    snprintf(tmp, sizeof(tmp), "/boot/modules.sqfs");
+    modulesfs = open(tmp, O_RDONLY);
+    if(modulesfs < 0) {
+      printf("Unable to open %s -- %s\n", tmp, strerror(errno));
+      exit(1);
+    }
+  }
+
+  printf("Mounting modules from %s\n", tmp);
+
+  int loop1 = open("/dev/loop1", O_RDONLY);
+  if(loop1 < 0) {
+    printf("Unable to open /dev/loop1 -- %s\n",
+	   strerror(errno));
+    exit(1);
+  }
+
+  if(ioctl(loop1, LOOP_SET_FD, modulesfs)) {
+    printf("Unable to ioctl(loop1, moduleesfs) -- %s\n", strerror(errno));
+    exit(1);
+  }
+
+  if(mount("/dev/loop1", "/root/lib/modules", "squashfs", MS_RDONLY, "")) {
+    printf("/dev/loop1 failed to mount %s\n", strerror(errno));
+    exit(1);
+  }
+  close(modulesfs);
+  close(loop1);
+}
+
+
+int
+main(int argc, char **argv)
+{
+  struct utsname uts;
+
+  mkdir("/dev", 0700);
+  mkdir("/proc", 0700);
+  mkdir("/boot", 0700);
+  mkdir("/root", 0700);
+  mkdir("/persistent", 0700);
+
+  if(mount("tmpfs", "/dev", "tmpfs", 0, "")) {
+    printf("proc failed to mount %s\n", strerror(errno));
+    exit(1);
+  }
+
+  mknod("/dev/console", S_IFCHR | 0644, makedev(5, 1));
+  mknod("/dev/loop0",   S_IFBLK | 0644, makedev(7, 0));
+  mknod("/dev/loop1",   S_IFBLK | 0644, makedev(7, 1));
+
+  dup2(0, open("/dev/console", O_RDWR));
+  dup2(1, open("/dev/console", O_RDWR));
+  dup2(2, open("/dev/console", O_RDWR));
+  printf("sqfs init starting\n");
+
+  if(uname(&uts)) {
+    printf("uname() failed -- %s\n", strerror(errno));
+    exit(1);
+  }
+
+  if(mount("proc", "/proc", "proc", 0, "")) {
+    printf("proc failed to mount %s\n", strerror(errno));
+    exit(1);
+  }
+
+  parse_partition_table();
+
+  extern void fsck(const char *path);
+  fsck("/dev/mmcblk0p1");
+
+  if(mount("/dev/mmcblk0p1", "/boot", "vfat", MS_RDONLY, "")) {
+    printf("/dev/mmcblk0p1 failed to mount %s\n", strerror(errno));
+    exit(1);
+  }
+
+  mount_rootfs();
+  mount_modulefs(&uts);
+
 
   printf("Ok, about to transfer control to rootfs\n");
 
@@ -156,5 +215,4 @@ main(int argc, char **argv)
   argv[0] = "/sbin/init";
   execv(argv[0], argv);
   printf("Unable to execv(\"%s\") -- %s\n", argv[0], strerror(errno));
-
 }
