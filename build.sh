@@ -208,8 +208,8 @@ case "${TARGET}" in
         export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi-${TYPE}.config"
         KSRC="${STOSROOT}/linux-rpi"
         mkdir -p "${BUILDDIR}/kernel"
-        make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} zImage ${JARGS}
-        cp "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel.img"
+        make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} ${JARGS} zImage dtbs
+        cat "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/kernel/arch/arm/boot/dts/bcm2835-rpi-b.dtb" >"${BUILDDIR}/boot/kernel.img"
 
         make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} modules ${JARGS}
         rm -rf "${BUILDDIR}/modinst/lib/modules"
@@ -221,8 +221,8 @@ case "${TARGET}" in
         export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi2-${TYPE}.config"
         KSRC="${STOSROOT}/linux-rpi"
         mkdir -p "${BUILDDIR}/kernel7"
-        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} zImage ${JARGS}
-        cp "${BUILDDIR}/kernel7/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel7.img"
+        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} zImage dtbs ${JARGS}
+        cat "${BUILDDIR}/kernel7/arch/arm/boot/zImage" "${BUILDDIR}/kernel7/arch/arm/boot/dts/bcm2709-rpi-2-b.dtb" >"${BUILDDIR}/boot/kernel7.img"
 
         make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} modules ${JARGS}
         rm -rf "${BUILDDIR}/modinst7/lib/modules"
