@@ -101,6 +101,7 @@ case "${TARGET}" in
 	ARCH=arm
 	HOSTDIR="${BUILDDIR}/buildroot/host"
 	UTC="${BUILDDIR}/buildroot/host/usr/bin/arm-buildroot-linux-gnueabihf-"
+	SYSROOT="${BUILDDIR}/buildroot/host/usr/arm-buildroot-linux-gnueabihf/sysroot"
 	DOOZER_ARTIFACTS=rpi_doozer_artifacts
 	;;
     *)
@@ -153,6 +154,7 @@ case "${CMD}" in
 	;;
     info)
         echo "Userland toolchain      ${UTC}"
+        echo "Sysroot                 ${SYSROOT}"
         exit 0
         ;;
     get-toolchain)
