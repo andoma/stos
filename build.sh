@@ -65,6 +65,8 @@ rpi_doozer_artifacts() {
     artifact      output/${TARGET}/${TYPE}/boot/bootcode.bin  bin  application/octet-stream bootcode.bin
     artifact      output/${TARGET}/${TYPE}/boot/fixup_x.dat   bin  application/octet-stream fixup_x.dat
     artifact      output/${TARGET}/${TYPE}/boot/start_x.elf   bin  application/octet-stream start_x.elf
+    artifact_sel  output/${TARGET}/${TYPE}/boot/bcm2709-rpi-2-b.dtb   bin  application/octet-stream bcm2709-rpi-2-b.dtb "machine=armv7l"
+    artifact_sel  output/${TARGET}/${TYPE}/boot/bcm2710-rpi-3-b.dtb   bin  application/octet-stream bcm2710-rpi-3-b.dtb "machine=armv7l"
 }
 
 # ------------------------
@@ -222,8 +224,8 @@ case "${TARGET}" in
         KSRC="${STOSROOT}/linux-rpi"
         mkdir -p "${BUILDDIR}/kernel7"
         make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} zImage dtbs ${JARGS}
-        cat "${BUILDDIR}/kernel7/arch/arm/boot/zImage" "${BUILDDIR}/kernel7/arch/arm/boot/dts/bcm2709-rpi-2-b.dtb" >"${BUILDDIR}/boot/kernel7.img"
 
+        "${KSRC}/scripts/mkknlimg" "${BUILDDIR}/kernel7/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel7.img"
         make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} modules ${JARGS}
         rm -rf "${BUILDDIR}/modinst7/lib/modules"
         make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} INSTALL_MOD_PATH=${BUILDDIR}/modinst7 modules_install ${JARGS}
@@ -241,13 +243,19 @@ esac
 # Linux firmware
 #===========================================================================
 
-mksquashfs "${STOSROOT}/linux-firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp xz -wildcards -ef "${STOSROOT}/exclude.txt"
+rm -rf "${BUILDDIR}/firmware"
+mkdir -p "${BUILDDIR}/firmware"
+cp -r ${STOSROOT}/linux-firmware/* "${BUILDDIR}/firmware/"
+cp -r ${STOSROOT}/rpi-firmware/* "${BUILDDIR}/firmware/"
+rm -f "${BUILDDIR}/boot/firmware.sqfs"
+
+mksquashfs "${BUILDDIR}/firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp xz -wildcards -ef "${STOSROOT}/exclude.txt"
 
 #===========================================================================
 # Showtime release
 #===========================================================================
 
-DLINFO=`curl -L https://movian.tv/upgrade/1/stable-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
+DLINFO=`curl -L http://upgrade.movian.tv/upgrade/2/testing-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
 
 echo "Using Movian: $DLINFO"
 

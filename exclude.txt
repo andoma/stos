@@ -4,3 +4,7 @@ i2400m-fw-usb-1.4.sbcf
 i2400m-fw-usb-1.5.sbcf
 i6050-fw-usb-1.5.sbcf
 phanfw.bin
+brcm/*-pcie.bin
+radeon/*
+bnx2/*
+bnx2x/*
