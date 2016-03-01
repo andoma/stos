@@ -65,8 +65,11 @@ rpi_doozer_artifacts() {
     artifact      output/${TARGET}/${TYPE}/boot/bootcode.bin  bin  application/octet-stream bootcode.bin
     artifact      output/${TARGET}/${TYPE}/boot/fixup_x.dat   bin  application/octet-stream fixup_x.dat
     artifact      output/${TARGET}/${TYPE}/boot/start_x.elf   bin  application/octet-stream start_x.elf
-    artifact_sel  output/${TARGET}/${TYPE}/boot/bcm2709-rpi-2-b.dtb   bin  application/octet-stream bcm2709-rpi-2-b.dtb "machine=armv7l"
-    artifact_sel  output/${TARGET}/${TYPE}/boot/bcm2710-rpi-3-b.dtb   bin  application/octet-stream bcm2710-rpi-3-b.dtb "machine=armv7l"
+
+    artifact_sel  output/${TARGET}/${TYPE}/boot/bcm2709-rpi-2-b.dtb    bin  application/octet-stream bcm2709-rpi-2-b.dtb    "machine=armv7l"
+    artifact_sel  output/${TARGET}/${TYPE}/boot/bcm2710-rpi-3-b.dtb    bin  application/octet-stream bcm2710-rpi-3-b.dtb    "machine=armv7l"
+    artifact_sel  output/${TARGET}/${TYPE}/boot/bcm2835-rpi-b.dtb      bin  application/octet-stream bcm2835-rpi-b.dtb      "machine=armv6l"
+    artifact_sel  output/${TARGET}/${TYPE}/boot/bcm2835-rpi-b-plus.dtb bin  application/octet-stream bcm2835-rpi-b-plus.dtb "machine=armv6l"
 }
 
 # ------------------------
@@ -211,7 +214,8 @@ case "${TARGET}" in
         KSRC="${STOSROOT}/linux-rpi"
         mkdir -p "${BUILDDIR}/kernel"
         make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} ${JARGS} zImage dtbs
-        cat "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/kernel/arch/arm/boot/dts/bcm2835-rpi-b.dtb" >"${BUILDDIR}/boot/kernel.img"
+
+        "${KSRC}/scripts/mkknlimg" "${BUILDDIR}/kernel/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel.img"
 
         make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} modules ${JARGS}
         rm -rf "${BUILDDIR}/modinst/lib/modules"
