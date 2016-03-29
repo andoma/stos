@@ -137,6 +137,7 @@ case "${CMD}" in
 	git submodule update --init -f buildroot
 	git submodule update --init -f mkfatimg
 	git submodule update --init -f linux-firmware
+	git submodule update --init -f musl-kernel-headers
 	git submodule update --init -f ${KSRC}
 
         echo "Git submodule status after update"
@@ -197,7 +198,8 @@ cp "${BUILDDIR}/buildroot/images/rootfs.squashfs" "${BUILDDIR}/boot/rootfs.sqfs"
 rm -rf "${BUILDDIR}/initrd"
 mkdir -p "${BUILDDIR}/initrd"
 
-${UTC}gcc -O2 -static -o "${BUILDDIR}/initrd/init" ${STOSROOT}/src/*.c
+make -C init O="${BUILDDIR}/init" ARCH=arm CROSS_COMPILE="${UTC}" KHEADERS="${STOSROOT}/musl-kernel-headers" MODE=stos INITRD="${BUILDDIR}/initrd" install
+
 
 #===========================================================================
 # Linux kernel
@@ -209,7 +211,19 @@ case "${TARGET}" in
 
         # For rpi we will build two kernels
 
-        # First for rpi1
+        # rpi2 (kernel7)
+        export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi2-${TYPE}.config"
+        KSRC="${STOSROOT}/linux-rpi"
+        mkdir -p "${BUILDDIR}/kernel7"
+        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} zImage dtbs ${JARGS}
+
+        "${KSRC}/scripts/mkknlimg" "${BUILDDIR}/kernel7/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel7.img"
+        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} modules ${JARGS}
+        rm -rf "${BUILDDIR}/modinst7/lib/modules"
+        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} INSTALL_MOD_PATH=${BUILDDIR}/modinst7 modules_install ${JARGS}
+        mksquashfs "${BUILDDIR}/modinst7/lib/modules" "${BUILDDIR}/boot/modules_armv7l.sqfs" -comp xz
+
+        # rpi1
         export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi-${TYPE}.config"
         KSRC="${STOSROOT}/linux-rpi"
         mkdir -p "${BUILDDIR}/kernel"
@@ -223,17 +237,6 @@ case "${TARGET}" in
         mksquashfs "${BUILDDIR}/modinst/lib/modules" "${BUILDDIR}/boot/modules.sqfs" -comp xz
 
 
-        # Then for rpi2 (kernel7)
-        export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi2-${TYPE}.config"
-        KSRC="${STOSROOT}/linux-rpi"
-        mkdir -p "${BUILDDIR}/kernel7"
-        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} zImage dtbs ${JARGS}
-
-        "${KSRC}/scripts/mkknlimg" "${BUILDDIR}/kernel7/arch/arm/boot/zImage" "${BUILDDIR}/boot/kernel7.img"
-        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} modules ${JARGS}
-        rm -rf "${BUILDDIR}/modinst7/lib/modules"
-        make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} INSTALL_MOD_PATH=${BUILDDIR}/modinst7 modules_install ${JARGS}
-        mksquashfs "${BUILDDIR}/modinst7/lib/modules" "${BUILDDIR}/boot/modules_armv7l.sqfs" -comp xz
 	;;
     *)
 	die "Unknown target for kernel build"

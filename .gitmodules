@@ -10,3 +10,6 @@
 [submodule "linux-rpi"]
 	path = linux-rpi
 	url = https://github.com/raspberrypi/linux.git
+[submodule "musl-kernel-headers"]
+	path = musl-kernel-headers
+	url = https://github.com/sabotage-linux/kernel-headers.git
