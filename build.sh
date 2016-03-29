@@ -262,7 +262,7 @@ mksquashfs "${BUILDDIR}/firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp xz -wil
 # Showtime release
 #===========================================================================
 
-DLINFO=`curl -L http://upgrade.movian.tv/upgrade/2/testing-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
+DLINFO=`curl -L http://upgrade.movian.tv/upgrade/3/testing-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
 
 echo "Using Movian: $DLINFO"
 
