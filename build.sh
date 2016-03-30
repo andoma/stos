@@ -76,10 +76,13 @@ rpi_doozer_artifacts() {
 
 JARGS=""
 
-while getopts "j:" o; do
+while getopts "j:m:" o; do
     case "${o}" in
         j)
 	    JARGS="-j${OPTARG}"
+            ;;
+        m)
+	    MOVIANURL="${OPTARG}"
             ;;
         *)
             usage
@@ -259,16 +262,17 @@ rm -f "${BUILDDIR}/boot/firmware.sqfs"
 mksquashfs "${BUILDDIR}/firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp xz -wildcards -ef "${STOSROOT}/exclude.txt"
 
 #===========================================================================
-# Showtime release
+# Movian release
 #===========================================================================
 
-DLINFO=`curl -L http://upgrade.movian.tv/upgrade/3/testing-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
+if [[ -z "$MOVIANURL" ]]; then
+    DLINFO=`curl -L http://upgrade.movian.tv/upgrade/3/testing-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
 
-echo "Using Movian: $DLINFO"
+    echo "Using Movian: $DLINFO"
+    MOVIANURL=`echo "$DLINFO" | cut -d" " -f1`
+fi
 
-DLURL=`echo "$DLINFO" | cut -d" " -f1`
-
-wget -O "${BUILDDIR}/boot/showtime.sqfs" $DLURL
+wget -O "${BUILDDIR}/boot/showtime.sqfs" $MOVIANURL
 
 
 #===========================================================================
