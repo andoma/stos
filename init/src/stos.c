@@ -9,6 +9,7 @@
 #include <sys/mount.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/utsname.h>
 
 #include "util.h"
 #include "logging.h"
@@ -517,7 +518,22 @@ step_mount_root(void)
 
   mount_sqfs_or_panic("/boot/rootfs.sqfs", "/root");
   mount_sqfs_or_panic("/boot/firmware.sqfs", "/root/lib/firmware");
-  mount_sqfs_or_panic("/boot/modules_armv7l.sqfs", "/root/lib/modules");
+
+  struct utsname uts;
+  if(uname(&uts)) {
+    printf("uname() failed -- %s\n", strerror(errno));
+    exit(1);
+  }
+
+  char modulesname[128];
+  snprintf(modulesname, sizeof(modulesname), "/boot/modules_%s.sqfs",
+           uts.machine);
+
+  if(!access(modulesname, R_OK)) {
+    mount_sqfs_or_panic(modulesname, "/root/lib/modules");
+  } else {
+    mount_sqfs_or_panic("/boot/modules.sqfs", "/root/lib/modules");
+  }
 
   mount_or_panic("/boot", "/root/boot", NULL, MS_MOVE, "");
 }

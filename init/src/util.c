@@ -203,8 +203,7 @@ mount_sqfs_or_panic(const char *source, const char *target)
 {
   loopmount_t lm;
   if(loopmount(source, target, "squashfs", 0, 1, &lm)) {
-    trace(LOG_ALERT, "Failed to mount sqfs %s on %s",
-          source, target);
+    printf("Failed to mount sqfs %s on %s\n", source, target);
     exit(1);
   }
 }
