@@ -165,6 +165,7 @@ start_movian_from_bundle(const char *bundle)
 
   int ret = runcmd(MOVIANMOUNTPATH"/bin/showtime"
                    " --syslog "
+                   " -d "
                    " --with-poweroff "
                   " --cache "
                    CACHEPATH"/showtime "
