@@ -115,14 +115,17 @@ start_sshd(void *aux)
  *
  */
 static int
-format_partition(int partid)
+format_partition(int partid, int with_journal)
 {
   char cmdline[512];
   const char *label;
   const char *part;
 
-  const char *fsopts =
-    "-E nodiscard,stride=2,stripe-width=1024 -b 4096 -O ^has_journal";
+  const char *fsopts = "-E nodiscard,stride=2,stripe-width=1024 -b 4096";
+  const char *opts = "";
+
+  if(!with_journal)
+    opts = "-O ^has_journal";
 
   switch(partid) {
   case 2:
@@ -144,8 +147,8 @@ format_partition(int partid)
 	partid, label, part);
 
   snprintf(cmdline, sizeof(cmdline),
-           "/usr/sbin/mkfs.ext4 -F -L %s %s %s",
-           label, fsopts, part);
+           "/usr/sbin/mkfs.ext4 -F -L %s %s %s %s",
+           label, fsopts, opts, part);
   return runcmd_ec(cmdline);
 }
 
@@ -269,7 +272,7 @@ start_movian(void *aux)
     if(shortrun == 3) {
       trace(LOG_ERR, "Movian keeps respawning quickly, clearing cache");
       unmount(CACHEPATH);
-      format_partition(3);
+      format_partition(3, 0);
 
       mount_or_panic(cache_part, CACHEPATH,
                      "ext4",  MS_NOATIME | MS_NOSUID | MS_NODEV, "");
@@ -281,7 +284,7 @@ start_movian(void *aux)
       trace(LOG_ERR,
             "Movian keeps respawning quickly, clearing persistent partition");
       unmount(PERSISTENTPATH);
-      format_partition(2);
+      format_partition(2, 1);
       mount_or_panic(persistent_part, PERSISTENTPATH,
                      "ext4",  MS_NOATIME | MS_NOSUID | MS_NODEV, "");
       continue;
@@ -311,6 +314,29 @@ create_partition(int start, int end, const char *type, const char *fstype)
 	   flash_dev, type, fstype, start, end);
 
   return runcmd_ec(cmdline);
+}
+
+
+/**
+ *
+ */
+static void
+check_partition(int partnum, int with_journal)
+{
+  char cmdline[512];
+
+  trace(LOG_NOTICE, "Checking partition %d", partnum);
+  snprintf(cmdline, sizeof(cmdline),
+           "/usr/sbin/fsck.ext4 -y /dev/mmcblk0p%d", partnum);
+
+  runcmd_ec(cmdline);
+
+  snprintf(cmdline, sizeof(cmdline),
+           "/usr/sbin/tune2fs -O %s /dev/mmcblk0p%d",
+           with_journal ? "has_journal" : "^has_journal",
+           partnum);
+
+  runcmd_ec(cmdline);
 }
 
 
@@ -379,8 +405,10 @@ setup_partitions(void)
       trace(LOG_ERR, "Failed to create partition for persistent data");
       return -1;
     }
-    format_partition(2);
+    format_partition(2, 1);
     free_start = end + 1;
+  } else {
+    check_partition(2, 1);
   }
 
   if(!partfound[3]) {
@@ -394,7 +422,9 @@ setup_partitions(void)
       trace(LOG_ERR, "Failed to create partition for cached data");
       return -1;
     }
-    format_partition(3);
+    format_partition(3, 0);
+  } else {
+    check_partition(3, 0);
   }
   return 0;
 }
