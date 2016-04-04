@@ -20,6 +20,7 @@
 
 
 static pthread_t movian_shell;
+static int factory_reset;
 
 /**
  *
@@ -238,6 +239,7 @@ start_movian(void *aux)
 
 
     switch(exitcode) {
+    case 8:
     case RUN_BUNDLE_COMMAND_CRASH:
       if(shortrun < 5)
         break;
@@ -257,6 +259,11 @@ start_movian(void *aux)
       continue;
 
     case 14:  // Exit to shell
+      return NULL;
+
+    case 16:  // Factory reset
+      factory_reset = 1;
+      kill(1, SIGTERM);
       return NULL;
 
     case 15:  // System restart
@@ -584,4 +591,8 @@ step_halt(void)
   unmount(CACHEPATH);
   unmount(PERSISTENTPATH);
   remount("/boot", MS_RDONLY);
+  if(factory_reset) {
+    format_partition(2, 1);
+    format_partition(3, 0);
+  }
 }
