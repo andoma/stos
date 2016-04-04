@@ -32,7 +32,6 @@ int epollfd;
 #define TASK_STATUS_RUNNING  1
 #define TASK_STATUS_EXITED   2
 
-static int running = 1; // Cleared by SIGTERM
 int respawn = 1;
 static int shutdown_state;
 static int64_t shutdown_timeout;
@@ -270,6 +269,17 @@ tasks_running(void)
   return r;
 }
 
+
+static void *
+halt_thread(void *aux)
+{
+  step_halt();
+  sync();
+  reboot(RB_AUTOBOOT);
+  return NULL;
+}
+
+
 /**
  *
  */
@@ -356,8 +366,7 @@ main(int argc, char **argv)
     case 2:
       wakeup = shutdown_timeout;
       if(!tasks_running()) {
-        running = 0;
-        break;
+        goto dohalt;
       }
       if(hirestime() < shutdown_timeout)
         break;
@@ -371,12 +380,13 @@ main(int argc, char **argv)
       wakeup = shutdown_timeout;
       if(hirestime() < shutdown_timeout)
         break;
-      running = 0;
+    dohalt:
+      run_detached_thread(halt_thread, NULL);
+      shutdown_state = 5;
+    case 5:
+      break;
     }
 
-
-    if(!running)
-      break;
 
     int mssleep = -1;
     if(wakeup != INT64_MAX) {
@@ -420,9 +430,5 @@ main(int argc, char **argv)
       pthread_mutex_unlock(&task_mutex);
     }
   }
-
-  step_halt();
-  sync();
-  reboot(RB_AUTOBOOT);
   return 0;
 }

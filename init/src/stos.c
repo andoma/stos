@@ -18,9 +18,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-
-static pthread_t movian_shell;
 static int factory_reset;
+static pthread_t movian_shell;
 
 /**
  *
@@ -289,12 +288,10 @@ start_movian(void *aux)
 
     if(shortrun == 6) {
       trace(LOG_ERR,
-            "Movian keeps respawning quickly, clearing persistent partition");
-      unmount(PERSISTENTPATH);
-      format_partition(2, 1);
-      mount_or_panic(persistent_part, PERSISTENTPATH,
-                     "ext4",  MS_NOATIME | MS_NOSUID | MS_NODEV, "");
-      continue;
+            "Movian keeps respawning quickly, factory reset");
+      factory_reset = 1;
+      kill(1, SIGTERM);
+      return NULL;
     }
 
     if(shortrun)
@@ -591,8 +588,10 @@ step_halt(void)
   unmount(CACHEPATH);
   unmount(PERSISTENTPATH);
   remount("/boot", MS_RDONLY);
+
   if(factory_reset) {
-    format_partition(2, 1);
+    printf("Doing factory reset\n");
     format_partition(3, 0);
+    format_partition(2, 1);
   }
 }
