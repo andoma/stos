@@ -207,6 +207,7 @@ task_wait(task_t *t)
     pthread_cond_wait(&task_cond, &task_mutex);
 
   int r = t->t_exitstatus;
+  free(t->t_cmd);
   free(t);
   pthread_mutex_unlock(&task_mutex);
   return r;
