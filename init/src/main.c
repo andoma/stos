@@ -84,6 +84,11 @@ static const struct sigaction sigchld_sa = {
 static void
 sigusr1_handler(int sig)
 {
+  if(!shutdown_state) {
+    reboot_action = REBOOT_ACTION_HALT;
+    shutdown_state = 1;
+  }
+  respawn = 0;
 }
 
 static const struct sigaction sigusr1_sa = {
