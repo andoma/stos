@@ -26,8 +26,8 @@ CFLAGS += -std=c99 -O2 -Wall -Werror -I${KHEADERS}/${ARCH}/include
 
 CC=${O}/musl/bin/musl-gcc
 
-${O}/initrd: ${O}/init Makefile
-	(cd ${O} && (echo ./init | cpio -H newc -o > $@))
+${O}/initrd: ${O}/stage/init Makefile
+	(cd ${O}/stage && (find . -type f | cpio -H newc -o > $@))
 
 
 ${O}/musl-src/Makefile:
@@ -39,7 +39,7 @@ ${CC}: ${O}/musl-src/Makefile
 	@mkdir -p $(dir $@)
 	(cd "${O}/musl-src" && CC=${CROSS_COMPILE}gcc ./configure "--prefix=${O}/musl" --disable-shared && make -j4 install)
 
-${O}/init: ${OBJS} Makefile ${CC}
+${O}/stage/init: ${OBJS} Makefile ${CC}
 	@mkdir -p $(dir $@)
 	${CC} -o $@ ${OBJS}
 
@@ -47,7 +47,7 @@ ${O}/%.o: %.c Makefile ${CC}
 	@mkdir -p $(dir $@)
 	${CC} -MD -MP ${CFLAGS} -D_GNU_SOURCE -o $@ -c $<
 
-install: ${O}/init
+install: ${O}/stage/init
 	cp $< "${INITRD}/"
 
 -include $(DEPS)
