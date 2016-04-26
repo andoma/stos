@@ -265,8 +265,9 @@ start_movian(void *aux)
       kill(1, SIGTERM);
       return NULL;
 
-    case 15:  // System restart
     case 11:
+      reboot_action = REBOOT_ACTION_HALT;
+    case 15:  // System restart
       kill(1, SIGTERM);
       return NULL;
 

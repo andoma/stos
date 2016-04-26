@@ -32,7 +32,9 @@ int epollfd;
 #define TASK_STATUS_RUNNING  1
 #define TASK_STATUS_EXITED   2
 
+int reboot_action; // REBOOT_ACTION_ -defines (0 is restart)
 int respawn = 1;
+
 static int shutdown_state;
 static int64_t shutdown_timeout;
 
@@ -276,6 +278,14 @@ halt_thread(void *aux)
 {
   step_halt();
   sync();
+
+  switch(reboot_action) {
+  case REBOOT_ACTION_HALT:
+    reboot(RB_HALT_SYSTEM);
+    break;
+  default:
+    break;
+  }
   reboot(RB_AUTOBOOT);
   return NULL;
 }

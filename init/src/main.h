@@ -4,6 +4,12 @@
 
 extern int respawn;
 
+#define REBOOT_ACTION_RESTART 0 // Default, just restart the system
+#define REBOOT_ACTION_HALT    1
+
+extern int reboot_action;
+
+
 void step_mount_root(void);
 
 void step_start_userland(void);
