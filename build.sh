@@ -111,6 +111,7 @@ case "${TARGET}" in
 	UTC="${BUILDDIR}/buildroot/host/usr/bin/arm-buildroot-linux-gnueabihf-"
 	SYSROOT="${BUILDDIR}/buildroot/host/usr/arm-buildroot-linux-gnueabihf/sysroot"
 	DOOZER_ARTIFACTS=rpi_doozer_artifacts
+        KSRC="${STOSROOT}/linux-rpi"
 	;;
     *)
 	die "Unknown target"
@@ -123,9 +124,31 @@ BR_CONFIG="${BUILDDIR}/buildroot/.config"
 # What to do
 #===========================================================================
 
+DO_USERLAND=1
+DO_KERNEL=1
+DO_FIRMWARE=1
+DO_MODULES=1
+DO_MOVIAN=1
+
 case "${CMD}" in
     build)
 	echo "Building ${STOS_VERSION} for ${TARGET}"
+	;;
+
+    kbuild)
+	echo "Building kernel only for ${TARGET}"
+        DO_USERLAND=0
+        DO_MODULES=0
+        DO_FIRMWARE=0
+        DO_MOVIAN=0
+	;;
+
+    kmods)
+	echo "Building kernel only for ${TARGET}"
+        DO_USERLAND=0
+        DO_KERNEL=0
+        DO_FIRMWARE=0
+        DO_MOVIAN=0
 	;;
 
     update_submodules)
@@ -164,6 +187,16 @@ case "${CMD}" in
     info)
         echo "Userland toolchain      ${UTC}"
         echo "Sysroot                 ${SYSROOT}"
+        echo "Kernel source           ${KSRC}"
+        exit 0
+        ;;
+    kconfig)
+        export KCONFIG_CONFIG="${STOSROOT}/config/kernel-${TARGET}-${TYPE}.config"
+        make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm menuconfig
+        exit 0
+        ;;
+    kcmd)
+        echo KCONFIG_CONFIG="${STOSROOT}/config/kernel-${TARGET}-${TYPE}.config" make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC}
         exit 0
         ;;
     get-toolchain)
@@ -187,12 +220,16 @@ mkdir -p "${BUILDDIR}/boot"
 # Buildroot (Root filesystem)
 #===========================================================================
 
+if [ ${DO_USERLAND} -eq 1 ]; then
 
 mkdir -p "${BUILDDIR}/buildroot"
 cp "${STOSROOT}/config/buildroot-${TARGET}-${TYPE}.config" "${BR_CONFIG}"
 
 make -C ${STOSROOT}/buildroot O=${BUILDDIR}/buildroot/
 cp "${BUILDDIR}/buildroot/images/rootfs.squashfs" "${BUILDDIR}/boot/rootfs.sqfs"
+
+fi
+
 
 #===========================================================================
 # Initrd for mounting sqfs as root
@@ -216,7 +253,6 @@ case "${TARGET}" in
 
         # rpi2 (kernel7)
         export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi2-${TYPE}.config"
-        KSRC="${STOSROOT}/linux-rpi"
         mkdir -p "${BUILDDIR}/kernel7"
         make -C ${KSRC} O=${BUILDDIR}/kernel7/ ARCH=arm CROSS_COMPILE=${UTC} zImage dtbs ${JARGS}
 
@@ -228,7 +264,6 @@ case "${TARGET}" in
 
         # rpi1
         export KCONFIG_CONFIG="${STOSROOT}/config/kernel-rpi-${TYPE}.config"
-        KSRC="${STOSROOT}/linux-rpi"
         mkdir -p "${BUILDDIR}/kernel"
         make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm CROSS_COMPILE=${UTC} ${JARGS} zImage dtbs
 
@@ -248,10 +283,11 @@ esac
 
 
 
-
 #===========================================================================
 # Linux firmware
 #===========================================================================
+
+if [ ${DO_FIRMWARE} -eq 1 ]; then
 
 rm -rf "${BUILDDIR}/firmware"
 mkdir -p "${BUILDDIR}/firmware"
@@ -261,9 +297,13 @@ rm -f "${BUILDDIR}/boot/firmware.sqfs"
 
 mksquashfs "${BUILDDIR}/firmware" "${BUILDDIR}/boot/firmware.sqfs" -comp xz -wildcards -ef "${STOSROOT}/exclude.txt"
 
+fi
+
 #===========================================================================
 # Movian release
 #===========================================================================
+
+if [ ${DO_MOVIAN} -eq 1 ]; then
 
 if [[ -z "$MOVIANURL" ]]; then
     DLINFO=`curl -L http://upgrade.movian.tv/upgrade/3/testing-${TARGET}.json | python -c 'import json,sys;obj=json.load(sys.stdin);v= [x for x in obj["artifacts"] if x["type"] == "sqfs"][0]; print "%s %s" % (v["url"],obj["version"])'`
@@ -273,7 +313,7 @@ if [[ -z "$MOVIANURL" ]]; then
 fi
 
 wget -O "${BUILDDIR}/boot/showtime.sqfs" $MOVIANURL
-
+fi
 
 #===========================================================================
 # Other stuff
