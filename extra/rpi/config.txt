@@ -7,6 +7,7 @@
 start_file=start_x.elf
 fixup_file=fixup_x.elf
 gpu_mem=192
+gpu_mem_256=112
 hdmi_ignore_cec_init=1
 boot_delay=1
 disable_splash=1
