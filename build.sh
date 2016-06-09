@@ -192,7 +192,7 @@ case "${CMD}" in
         ;;
     kconfig)
         export KCONFIG_CONFIG="${STOSROOT}/config/kernel-${TARGET}-${TYPE}.config"
-        make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm menuconfig
+        make -C ${KSRC} O=${BUILDDIR}/kernel/ ARCH=arm nconfig
         exit 0
         ;;
     kcmd)
