@@ -342,6 +342,7 @@ main(int argc, char **argv)
     tcsetpgrp(0, getpgrp());
     //  argv[0] = "/sbin/init";
     argv[0] = "/bin/sh";
+    argv[1] = NULL;
     execv(argv[0], argv);
   }
 
