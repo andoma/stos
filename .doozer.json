@@ -3,6 +3,7 @@
 
     "rpi": {
       "buildenv": "trusty-amd64",
+      "submodules": ["buildroot", "musl-kernel-headers", "mkfatimg", "linux-rpi", "linux-firmware"],
       "builddeps": [
         "git-core",
         "build-essential",
