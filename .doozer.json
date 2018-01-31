@@ -2,7 +2,7 @@
   "targets": {
 
     "rpi": {
-      "buildenv": "trusty-amd64",
+      "buildenv": "xenial-amd64",
       "submodules": ["buildroot", "musl-kernel-headers", "mkfatimg", "linux-rpi", "linux-firmware"],
       "builddeps": [
         "git-core",
